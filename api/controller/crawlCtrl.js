@@ -12,39 +12,25 @@ const fetchHTML = async (url) => {
   }
 };
 
-const crawl = async () => {
-  const URL = "https://pokemondb.net/pokedex/game/diamond-pearl";
-  const html = await fetchHTML(URL);
+const crawl = async (crawler) => {
+  const html = await fetchHTML(crawler.url);
   const $ = cheerio.load(html);
-  return $(
-    "#main > div.infocard-list.infocard-list-pkmn-lg > div > span.infocard-lg-data.text-muted > a"
-  )
+  return $(crawler.selector)
     .toArray()
     .map((x) => {
-      return $(x).text();
+      let result = {};
+      for (extract of crawler.extract) {
+        result[extract.name] =
+          extract.extract.type === "text"
+            ? $(x).find(extract.selector).text()
+            : JSON.stringify(
+                $(x)
+                  .find(extract.selector)
+                  .attr(extract.extract.attr || "")
+              );
+      }
+      return result;
     });
 };
 
 module.exports.crawl = crawl;
-
-// const treeToStr = () => {
-//   let str = "";
-//   selectorTree.forEach((selector) => {
-//     str = selector.tag || "";
-//     if (selector.attr) {
-//       str +=
-//         (selector.attrType === "id"
-//           ? "#"
-//           : selector.attrType === "class"
-//           ? ""
-//           : ":nth-child(") +
-//         (selector.attrType === "id"
-//           ? selector.attr.id
-//           : selector.attrType === "class"
-//           ? selector.attr.class.split(" ").join(".")
-//           : selector.attr.nthChild + ")");
-//     }
-//     str += " > ";
-//   });
-//   return str.slice(0, str.length - 3);
-// };
